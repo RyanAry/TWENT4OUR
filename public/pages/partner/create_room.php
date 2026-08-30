@@ -42,4 +42,5 @@ include '../../inc/dashboard/partner/inc_main.php';
 </div>
 <?php
 include '../../inc/alert.php';
+include '../../inc/dashboard/inc_footer.php';
 ?>

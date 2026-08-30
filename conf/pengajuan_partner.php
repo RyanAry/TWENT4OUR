@@ -2,48 +2,42 @@
 include 'db.php';
 
 if (isset($_POST['submit'])) {
-    //var
-    $akomodasi = $_POST['akomodasi'];
-    $nama_akomodasi = $_POST['nama_akomodasi'];
-    $email_perusahaan = $_POST['email'];
-    $alamat = $_POST['alamat'];
-    $provinsi = $_POST['provinsi'];
-    $kota = $_POST['kota'];
+    $akomodasi = sanitize($_POST['akomodasi']);
+    $nama_akomodasi = sanitize($_POST['nama_akomodasi']);
+    $email_perusahaan = sanitize($_POST['email']);
+    $alamat = sanitize($_POST['alamat']);
+    $provinsi = sanitize($_POST['provinsi']);
+    $kota = sanitize($_POST['kota']);
 
-    //alert message
-    $success_msg = "Akomodasi Berhasil Di Daftarkan";
-    $error_msg = "Akomodasi Sudah Terdaftar";
+    // Cek duplikat di pengajuan_partner
+    $stmt = $db->prepare("SELECT * FROM `pengajuan_partner` WHERE nama_akomodasi = ? OR email_perusahaan = ?");
+    $stmt->bind_param("ss", $nama_akomodasi, $email_perusahaan);
+    $stmt->execute();
+    $cek_data = $stmt->get_result();
+    $stmt->close();
 
-    //cek data double pengajuan partner
-    $cek = "SELECT * FROM `pengajuan_partner` WHERE nama_akomodasi = '$nama_akomodasi' OR email_perusahaan = '$email_perusahaan'";
-    $cek_data = mysqli_query($db, $cek);
+    // Cek duplikat di partner
+    $stmt = $db->prepare("SELECT * FROM `partner` WHERE nama_akomodasi = ? OR email_perusahaan = ?");
+    $stmt->bind_param("ss", $nama_akomodasi, $email_perusahaan);
+    $stmt->execute();
+    $cek_data_partner = $stmt->get_result();
+    $stmt->close();
 
-    //cek data double partner
-    $cek_partner = "SELECT * FROM `partner` WHERE nama_akomodasi = '$nama_akomodasi' OR email_perusahaan = '$email_perusahaan'";
-    $cek_data_partner = mysqli_query($db, $cek_partner);
-
-    // Check data
     if ($cek_data->num_rows > 0 || $cek_data_partner->num_rows > 0) {
-        //error message
-        $_SESSION['status'] = 'Error';
-        $_SESSION['error_msg'] = $error_msg;
-        header("Location: ../public/pages/pengajuan_partner.php");
+        setAlert('Error', 'Akomodasi Sudah Terdaftar');
+        redirect("../public/pages/pengajuan_partner.php");
     } else {
-        // Insert query
-        $query = "INSERT INTO `pengajuan_partner`(`akomodasi`, `nama_akomodasi`, `email_perusahaan`, `alamat`, `provinsi`, `kota`) VALUES ('$akomodasi','$nama_akomodasi','$email_perusahaan','$alamat','$provinsi','$kota')";
-
-        //query
-        $insert = mysqli_query($db, $query);
+        $stmt = $db->prepare("INSERT INTO `pengajuan_partner`(`akomodasi`, `nama_akomodasi`, `email_perusahaan`, `alamat`, `provinsi`, `kota`) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $akomodasi, $nama_akomodasi, $email_perusahaan, $alamat, $provinsi, $kota);
+        $insert = $stmt->execute();
+        $stmt->close();
 
         if ($insert) {
-            $_SESSION['status'] = "Success";
-            $_SESSION['succes_msg'] = $success_msg;
-            header("location:../public/pages/pengajuan_partner.php");
+            setAlert('Success', 'Akomodasi Berhasil Di Daftarkan');
         } else {
-            $_SESSION['status'] = "Error";
-            $_SESSION['error_msg'] = $error_msg;
-            header("Location: ../public/pages/pengajuan_partner.php");
+            setAlert('Error', 'Pendaftaran gagal, silakan coba lagi');
         }
+        redirect("../public/pages/pengajuan_partner.php");
     }
 }
 ?>

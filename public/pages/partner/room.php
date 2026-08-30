@@ -113,4 +113,5 @@ include '../../../conf/partner/room.php';
 </div>
 <?php
 include '../../inc/alert.php';
+include '../../inc/dashboard/inc_footer.php';
 ?>

@@ -1,67 +1,56 @@
 <?php
-    include '../../../conf/db.php';
+include '../../../conf/db.php';
 
-    if (isset($_POST['add'])) {
-    
-    $id_akomodasi = $_POST['id'];
-    $email = $_POST['email'];
-    $name = $_POST['nama'];
-    $username = $_POST['username'];
+if (isset($_POST['add'])) {
+    $id_akomodasi = intval($_POST['id']);
+    $email = sanitize($_POST['email']);
+    $name = sanitize($_POST['nama']);
+    $username = sanitize($_POST['username']);
     $password = $_POST['password'];
 
-    // Query check data double
-    $query_data_admin_partner = "SELECT * FROM `partner_admin` WHERE username = '$username' AND id_akomodasi = '$id_akomodasi'";
-    $data_admin_partner = mysqli_query($db, $query_data_admin_partner);
+    // Cek duplikat
+    $stmt = $db->prepare("SELECT * FROM `partner_admin` WHERE username = ? AND id_akomodasi = ?");
+    $stmt->bind_param("si", $username, $id_akomodasi);
+    $stmt->execute();
+    $data_admin_partner = $stmt->get_result();
+    $stmt->close();
 
-        // Check data double
-        if ($data_admin_partner->num_rows > 0) {
-            $_SESSION['status'] = "Error";
-            $_SESSION['error_msg'] = "Email atau username sudah terdaftar";
+    if ($data_admin_partner->num_rows > 0) {
+        setAlert('Error', 'Email atau username sudah terdaftar');
+    } else {
+        $stmt = $db->prepare("INSERT INTO `partner_admin`(`id_akomodasi`, `nama`, `username`, `password`, `email`) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("issss", $id_akomodasi, $name, $username, $password, $email);
+        $insert = $stmt->execute();
+        $stmt->close();
+
+        if ($insert) {
+            setAlert('Success', 'Data berhasil ditambahkan');
         } else {
-            //msg
-            $success = "Data berhasil ditambahkan";
-            $failed = "Data gagal ditambahkan";
-
-            // Insert query
-            $query_insert = "INSERT INTO `partner_admin`(`id_akomodasi`, `nama`, `username`, `password`, `email`) VALUES ('$id_akomodasi', '$name', '$username', '$password', '$email')";
-            $insert = mysqli_query($db, $query_insert);
-
-                //query insert data admin partner
-                if ($insert) {
-                    $_SESSION['status'] = "Success";
-                    $_SESSION['succes_msg'] = $success;
-                } else {
-                    $_SESSION['status'] = "Error";
-                    $_SESSION['error_msg'] = $failed;
-                }
-        }
-    }  else if (isset($_POST['delete'])) {
-        $id = $_POST['id'];
-
-        //msg
-        $success = "Data berhasil dihapus";
-        $failed = "Data gagal dihapus";
-
-        // Delete query partner
-        $query_delete_partner = "DELETE FROM `partner` WHERE id_partner = '$id'";
-        $delete_partner = mysqli_query($db, $query_delete_partner);
-
-        // Delete query partner_admin
-        $query_delete_admin = "DELETE FROM `partner_admin` WHERE id_akomodasi = '$id'";
-        $delete_admin = mysqli_query($db, $query_delete_admin);
-
-        if ($delete_partner && $delete_admin) {
-            $_SESSION['status'] = "Success";
-            $_SESSION['succes_msg'] = $success;
-            // header("Location: partner.php");
-        } else {
-            $_SESSION['status'] = "Error";
-            $_SESSION['error_msg'] = $failed;
-            // header("Location: partner.php");
+            setAlert('Error', 'Data gagal ditambahkan');
         }
     }
+} else if (isset($_POST['delete'])) {
+    $id = intval($_POST['id']);
 
-    $query_select = "SELECT * FROM `partner`";
-    $select = mysqli_query($db, $query_select);
+    // Delete partner
+    $stmt = $db->prepare("DELETE FROM `partner` WHERE id_partner = ?");
+    $stmt->bind_param("i", $id);
+    $delete_partner = $stmt->execute();
+    $stmt->close();
 
+    // Delete partner_admin
+    $stmt = $db->prepare("DELETE FROM `partner_admin` WHERE id_akomodasi = ?");
+    $stmt->bind_param("i", $id);
+    $delete_admin = $stmt->execute();
+    $stmt->close();
+
+    if ($delete_partner && $delete_admin) {
+        setAlert('Success', 'Data berhasil dihapus');
+    } else {
+        setAlert('Error', 'Data gagal dihapus');
+    }
+}
+
+$query_select = "SELECT * FROM `partner`";
+$select = $db->query($query_select);
 ?>

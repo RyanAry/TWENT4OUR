@@ -2,53 +2,48 @@
 include '../../../conf/db.php';
 
 if (isset($_POST['submit'])) {
-    $id = $_POST['id'];
-    $nama = $_POST['nama'];
-    $email = $_POST['email'];
-    $alamat = $_POST['alamat'];
-    $provinsi = $_POST['provinsi'];
-    $kota = $_POST['kota'];
-    $deskripsi = $_POST['deskripsi'];
+    $id = intval($_POST['id']);
+    $nama = sanitize($_POST['nama']);
+    $email = sanitize($_POST['email']);
+    $alamat = sanitize($_POST['alamat']);
+    $provinsi = sanitize($_POST['provinsi']);
+    $kota = sanitize($_POST['kota']);
+    $deskripsi = sanitize($_POST['deskripsi']);
 
-    $rand = rand();
-    $gambar = $_FILES['gambar']['name'];
-    $tmp = $_FILES['gambar']['tmp_name'];
-    $new_name = $rand . '_' . $gambar;
-    $path = "../../../asset/hotel/" . $new_name;
+    // Upload gambar hotel
+    $new_name = uploadFile($_FILES['gambar'], "../../../asset/hotel/");
 
-    if (move_uploaded_file($tmp, $path)) {
-        $query_update = "UPDATE `partner` SET `nama_akomodasi` = '$nama', `email_perusahaan` = '$email', `alamat` = '$alamat', `provinsi` = '$provinsi', `kota` = '$kota', `deskripsi` = '$deskripsi', `gambar` = '$new_name' WHERE `id_partner` = '$id'";
-        $update = mysqli_query($db, $query_update);
+    if ($new_name !== false) {
+        // Update dengan gambar baru
+        $stmt = $db->prepare("UPDATE `partner` SET `nama_akomodasi` = ?, `email_perusahaan` = ?, `alamat` = ?, `provinsi` = ?, `kota` = ?, `deskripsi` = ?, `gambar` = ? WHERE `id_partner` = ?");
+        $stmt->bind_param("sssssssi", $nama, $email, $alamat, $provinsi, $kota, $deskripsi, $new_name, $id);
+    } else {
+        // Update tanpa gambar (jika tidak upload gambar baru)
+        $stmt = $db->prepare("UPDATE `partner` SET `nama_akomodasi` = ?, `email_perusahaan` = ?, `alamat` = ?, `provinsi` = ?, `kota` = ?, `deskripsi` = ? WHERE `id_partner` = ?");
+        $stmt->bind_param("ssssssi", $nama, $email, $alamat, $provinsi, $kota, $deskripsi, $id);
+    }
 
-        if ($update) {
-            $_SESSION['status'] = "Success";
-            $_SESSION['succes_msg'] = "Room created successfully";
-            // header('Location: ../../public/pages/partner/create_room.php');
-        } else {
-            $_SESSION['status'] = "Error";
-            $_SESSION['error_msg'] = "Failed to create room";
-            // header('Location: ../../public/pages/partner/create_room.php');
-            // echo "Failed to create room";
-        }
+    $update = $stmt->execute();
+    $stmt->close();
 
-        $success = "Data berhasil diubah";
-        $failed = "Data gagal diubah";
-
-        if ($update) {
-            $_SESSION['status'] = "Success";
-            $_SESSION['succes_msg'] = $success;
-        } else {
-            $_SESSION['status'] = "Error";
-            $_SESSION['error_msg'] = $failed;
-        }
+    if ($update) {
+        setAlert('Success', 'Data berhasil diubah');
+    } else {
+        setAlert('Error', 'Data gagal diubah');
     }
 }
 
 $email = $_SESSION['email'];
 
-$query_select_akomodasi = "SELECT * FROM `partner_admin` WHERE `email` = '$email'";
-$select_akomodasi = mysqli_query($db, $query_select_akomodasi);
-$row_akomodasi = mysqli_fetch_assoc($select_akomodasi);
+$stmt = $db->prepare("SELECT * FROM `partner_admin` WHERE `email` = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$row_akomodasi = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-$query_select_room = "SELECT * FROM `partner` where `id_partner` = '$row_akomodasi[id_akomodasi]'";
-$select_partner = mysqli_query($db, $query_select_room);
+$stmt = $db->prepare("SELECT * FROM `partner` WHERE `id_partner` = ?");
+$stmt->bind_param("i", $row_akomodasi['id_akomodasi']);
+$stmt->execute();
+$select_partner = $stmt->get_result();
+$stmt->close();
+?>

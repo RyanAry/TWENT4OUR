@@ -2,36 +2,30 @@
 include '../db.php';
 
 if (isset($_POST['create'])) {
-    $id_akomodasi = $_POST['id_akomodasi'];
-    $nama = $_POST['nama'];
-    $tipe = $_POST['tipe'];
-    $harga = $_POST['harga'];
-    $deskripsi = $_POST['deskripsi'];
+    $id_akomodasi = intval($_POST['id_akomodasi']);
+    $nama = sanitize($_POST['nama']);
+    $tipe = sanitize($_POST['tipe']);
+    $harga = intval($_POST['harga']);
+    $deskripsi = sanitize($_POST['deskripsi']);
 
-    $rand = rand();
-    $gambar = $_FILES['gambar']['name'];
-    $tmp = $_FILES['gambar']['tmp_name'];
-    $new_name = $rand . '_' . $gambar;
-    $path = "../../asset/room/" . $new_name;
+    // Upload gambar room
+    $new_name = uploadFile($_FILES['gambar'], "../../asset/room/");
 
-    if (move_uploaded_file($tmp, $path)) {
-        $query_insert = "INSERT INTO room (id_akomodasi, nama, tipe, harga, deskripsi, gambar) VALUES ('$id_akomodasi', '$nama', '$tipe', '$harga', '$deskripsi', '$new_name')";
-        $insert = mysqli_query($db, $query_insert);
-
-        if ($insert) {
-            $_SESSION['status'] = "Success";
-            $_SESSION['succes_msg'] = "Room created successfully";
-            header('Location: ../../public/pages/partner/create_room.php');
-        } else {
-            $_SESSION['status'] = "Error";
-            $_SESSION['error_msg'] = "Failed to create room";
-            header('Location: ../../public/pages/partner/create_room.php');
-            // echo "Failed to create room";
-        }
-    } else {
-        $_SESSION['status'] = "Error";
-        $_SESSION['error_msg'] = "Failed to upload image";
-        echo "Failed to upload image";
+    if ($new_name === false) {
+        setAlert('Error', 'Gagal upload gambar. Pastikan file berupa gambar (max 5MB).');
+        redirect('../../public/pages/partner/create_room.php');
     }
+
+    $stmt = $db->prepare("INSERT INTO room (id_akomodasi, nama, tipe, harga, deskripsi, gambar) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ississ", $id_akomodasi, $nama, $tipe, $harga, $deskripsi, $new_name);
+    $insert = $stmt->execute();
+    $stmt->close();
+
+    if ($insert) {
+        setAlert('Success', 'Room created successfully');
+    } else {
+        setAlert('Error', 'Failed to create room');
+    }
+    redirect('../../public/pages/partner/create_room.php');
 }
 ?>

@@ -62,3 +62,6 @@ include '../../../conf/admin/admin_partner.php';
         </div>
     </div>
 </div>
+<?php
+include '../../inc/dashboard/inc_footer.php';
+?>

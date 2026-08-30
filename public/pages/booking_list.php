@@ -77,15 +77,15 @@ include '../../conf/booking_list.php';
                                         <?php if ($data_booking['status'] == 'pending') { ?>
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                                 Pending
-                                            </span>';
+                                            </span>
                                         <?php } else if ($data_booking['status'] == 'ditolak') { ?>
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                                                 Ditolak
-                                            </span>';
+                                            </span>
                                         <?php } else { ?>
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                                 Success
-                                            </span>';
+                                            </span>
                                         <?php } ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -128,7 +128,7 @@ include '../../conf/booking_list.php';
             </div>
         </div>
     </div>
-</div>\
+</div>
 <?php
 include '../inc/inc_footer.php';
 ?>

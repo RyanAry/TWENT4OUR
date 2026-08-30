@@ -37,4 +37,5 @@ include '../../../conf/partner/about.php';
 </div>
 <?php
 include '../../inc/alert.php';
+include '../../inc/dashboard/inc_footer.php';
 ?>

@@ -5,12 +5,16 @@ error_reporting(0);
 $email = $_SESSION['email'];
 $username = $_SESSION['username'];
 
-$sql = "SELECT * FROM `app_admin` WHERE email = '$email'";
-$admin_app = mysqli_query($db, $sql);
-$data_admin = mysqli_fetch_assoc($admin_app);
+$stmt = $db->prepare("SELECT * FROM `app_admin` WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$admin_app = $stmt->get_result();
+$data_admin = $admin_app->fetch_assoc();
+$stmt->close();
 
 if ($email == "" || $admin_app->num_rows == 0) {
     header("Location: ../../../public/pages/403.php");
+    exit();
 }
 ?>
 <!DOCTYPE html>
@@ -71,7 +75,6 @@ if ($email == "" || $admin_app->num_rows == 0) {
                             <ul class="py-1">
                                 <li>
                                     <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 hover:text-white">Dashboard</a>
-                                </li>
                                 </li>
                                 <li>
                                     <a href="../../../conf/logout.php" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 hover:text-white">Sign out</a>

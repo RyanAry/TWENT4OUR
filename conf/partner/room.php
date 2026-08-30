@@ -2,47 +2,48 @@
 include '../../../conf/db.php';
 
 if (isset($_POST['delete'])) {
-    $id = $_POST['id'];
-    $query_delete = "DELETE FROM `room` WHERE `id_room` = '$id'";
-    $delete = mysqli_query($db, $query_delete);
+    $id = intval($_POST['id']);
 
-    $success = "Room berhasil dihapus";
-    $failed = "Room gagal dihapus";
-    
+    $stmt = $db->prepare("DELETE FROM `room` WHERE `id_room` = ?");
+    $stmt->bind_param("i", $id);
+    $delete = $stmt->execute();
+    $stmt->close();
+
     if ($delete) {
-        $_SESSION['status'] = "Success";
-        $_SESSION['succes_msg'] = $success;
+        setAlert('Success', 'Room berhasil dihapus');
     } else {
-        $_SESSION['status'] = "Error";
-        $_SESSION['error_msg'] = $failed;
+        setAlert('Error', 'Room gagal dihapus');
     }
 } else if (isset($_POST['edit'])) {
-    $id = $_POST['id'];
-    $nama = $_POST['nama'];
-    $tipe = $_POST['tipe'];
-    $harga = $_POST['harga'];
-    $deskripsi = $_POST['deskripsi'];
+    $id = intval($_POST['id']);
+    $nama = sanitize($_POST['nama']);
+    $tipe = sanitize($_POST['tipe']);
+    $harga = intval($_POST['harga']);
+    $deskripsi = sanitize($_POST['deskripsi']);
 
-    $query_edit = "UPDATE `room` SET `nama` = '$nama', `tipe` = '$tipe', `harga` = '$harga', `deskripsi` = '$deskripsi' WHERE `id_room` = '$id'";
-    $edit = mysqli_query($db, $query_edit);
-
-    $success = "Room berhasil diubah";
-    $failed = "Room gagal diubah";
+    $stmt = $db->prepare("UPDATE `room` SET `nama` = ?, `tipe` = ?, `harga` = ?, `deskripsi` = ? WHERE `id_room` = ?");
+    $stmt->bind_param("ssisi", $nama, $tipe, $harga, $deskripsi, $id);
+    $edit = $stmt->execute();
+    $stmt->close();
 
     if ($edit) {
-        $_SESSION['status'] = "Success";
-        $_SESSION['succes_msg'] = $success;
+        setAlert('Success', 'Room berhasil diubah');
     } else {
-        $_SESSION['status'] = "Error";
-        $_SESSION['error_msg'] = $failed;
+        setAlert('Error', 'Room gagal diubah');
     }
 }
+
 $email = $_SESSION['email'];
-$query_select_akomodasi = "SELECT * FROM `partner_admin` WHERE `email` = '$email'";
-$select_akomodasi = mysqli_query($db, $query_select_akomodasi);
-$row_akomodasi = mysqli_fetch_assoc($select_akomodasi);
 
-$query_select_room = "SELECT * FROM `room` where `id_akomodasi` = '$row_akomodasi[id_akomodasi]'";
-$select_room = mysqli_query($db, $query_select_room);
+$stmt = $db->prepare("SELECT * FROM `partner_admin` WHERE `email` = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$row_akomodasi = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
+$stmt = $db->prepare("SELECT * FROM `room` WHERE `id_akomodasi` = ?");
+$stmt->bind_param("i", $row_akomodasi['id_akomodasi']);
+$stmt->execute();
+$select_room = $stmt->get_result();
+$stmt->close();
 ?>

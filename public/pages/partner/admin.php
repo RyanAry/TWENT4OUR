@@ -196,4 +196,5 @@ include '../../../conf/partner/admin.php';
 
 <?php
 include '../../inc/alert.php';
+include '../../inc/dashboard/inc_footer.php';
 ?>

@@ -5,9 +5,12 @@ error_reporting(0);
 $email = $_SESSION['email'];
 $username = $_SESSION['username'];
 
-$sql = "SELECT * FROM user WHERE email = '$email'";
-$user = mysqli_query($db, $sql);
-$data_admin = mysqli_fetch_assoc($user);
+$stmt = $db->prepare("SELECT * FROM user WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$user = $stmt->get_result();
+$data_admin = $user->fetch_assoc();
+$stmt->close();
 
 if ($email == "" || $user->num_rows == 0) {
     $_SESSION['status'] = 'Error';

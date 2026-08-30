@@ -54,7 +54,9 @@ unset($_SESSION['status']);
     const closeModalBtn = document.getElementById('closeModalBtn');
     const modal = document.getElementById('modal');
 
-    closeModalBtn.addEventListener('click', () => {
-        modal.classList.add('hidden');
-    });
+    if (closeModalBtn && modal) {
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
 </script>

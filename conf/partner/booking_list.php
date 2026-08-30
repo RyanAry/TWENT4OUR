@@ -2,83 +2,84 @@
 include '../../../conf/db.php';
 
 if (isset($_POST['approve'])) {
-    $id = $_POST['id'];
-    
-    $query = "UPDATE `booking` SET status = 'diterima' WHERE id_booking = '$id'";
-    $update = mysqli_query($db, $query);
+    $id = intval($_POST['id']);
 
-    $query_data_booking = "SELECT * FROM `booking` WHERE id_booking = '$id'";
-    $select_data_booking = mysqli_query($db, $query_data_booking);
-    $data_booking = mysqli_fetch_assoc($select_data_booking);
-    
-    //msg 
-    $success = "Berhasil Approve";
-    $failed = "Gagal Approve";
+    $stmt = $db->prepare("UPDATE `booking` SET status = 'diterima' WHERE id_booking = ?");
+    $stmt->bind_param("i", $id);
+    $update = $stmt->execute();
+    $stmt->close();
 
     if ($update) {
+        // Get booking data untuk update room status
+        $stmt = $db->prepare("SELECT * FROM `booking` WHERE id_booking = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $data_booking = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
 
-        $query_room = "UPDATE `room` SET `status`='tidak_tersedia' WHERE id_room = '$data_booking[id_room]'";
-        $update_room = mysqli_query($db, $query_room);
+        $stmt = $db->prepare("UPDATE `room` SET `status`='tidak_tersedia' WHERE id_room = ?");
+        $stmt->bind_param("i", $data_booking['id_room']);
+        $stmt->execute();
+        $stmt->close();
 
-        $_SESSION['status'] = 'Success';
-        $_SESSION['succes_msg'] = $success;
+        setAlert('Success', 'Berhasil Approve');
     } else {
-        $_SESSION['status'] = 'Error';
-        $_SESSION['Error_msg'] = $failed;
+        setAlert('Error', 'Gagal Approve');
     }
 } else if (isset($_POST['reject'])) {
-    $id = $_POST['id'];
-    $alasan = $_POST['alasan'];
-    
-    $query = "UPDATE `booking` SET status = 'ditolak', `alasan` = '$alasan' WHERE id_booking = '$id'";
-    $update = mysqli_query($db, $query);
+    $id = intval($_POST['id']);
+    $alasan = sanitize($_POST['alasan']);
 
-    //msg
-    $success = "Berhasil Reject";
-    $failed = "Gagal Reject";
+    $stmt = $db->prepare("UPDATE `booking` SET status = 'ditolak', `alasan` = ? WHERE id_booking = ?");
+    $stmt->bind_param("si", $alasan, $id);
+    $update = $stmt->execute();
+    $stmt->close();
 
     if ($update) {
-        $_SESSION['status'] = 'Success';
-        $_SESSION['succes_msg'] = $success;
+        setAlert('Success', 'Berhasil Reject');
     } else {
-        $_SESSION['status'] = 'Error';
-        $_SESSION['Error_msg'] = $failed;
+        setAlert('Error', 'Gagal Reject');
     }
 } else if (isset($_POST['delete'])) {
-    $id = $_POST['id'];
+    $id = intval($_POST['id']);
 
-    $query_data_booking = "SELECT * FROM `booking` WHERE id_booking = '$id'";
-    $select_data_booking = mysqli_query($db, $query_data_booking);
-    $data_booking = mysqli_fetch_assoc($select_data_booking);
+    // Get booking data untuk update room status
+    $stmt = $db->prepare("SELECT * FROM `booking` WHERE id_booking = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $data_booking = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
 
-    $query_room = "UPDATE `room` SET `status`='tersedia' WHERE id_room = '$data_booking[id_room]'";
-    $update_room = mysqli_query($db, $query_room);
+    // Set room kembali tersedia
+    $stmt = $db->prepare("UPDATE `room` SET `status`='tersedia' WHERE id_room = ?");
+    $stmt->bind_param("i", $data_booking['id_room']);
+    $stmt->execute();
+    $stmt->close();
 
-    //msg
-    $success = "Berhasil Delete";
-    $failed = "Gagal Delete";
-    
-    if ($update_room) {
+    // Delete booking
+    $stmt = $db->prepare("DELETE FROM `booking` WHERE id_booking = ?");
+    $stmt->bind_param("i", $id);
+    $delete = $stmt->execute();
+    $stmt->close();
 
-        $query = "DELETE FROM `booking` WHERE id_booking = '$id'";
-        $delete = mysqli_query($db, $query);
-
-        $_SESSION['status'] = 'Success';
-        $_SESSION['succes_msg'] = $success;
+    if ($delete) {
+        setAlert('Success', 'Berhasil Delete');
     } else {
-        $_SESSION['status'] = 'Error';
-        $_SESSION['Error_msg'] = $failed;
+        setAlert('Error', 'Gagal Delete');
     }
-} {
-
 }
 
 $email = $_SESSION['email'];
 
-$query = "SELECT * FROM `partner_admin` WHERE email = '$email'";
-$select = mysqli_query($db, $query);
-$data_user = mysqli_fetch_assoc($select);
+$stmt = $db->prepare("SELECT * FROM `partner_admin` WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$data_user = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-$query_booking = "SELECT * FROM `booking` WHERE id_akomodasi = '$data_user[id_akomodasi]'";
-$select_booking = mysqli_query($db, $query_booking);
+$stmt = $db->prepare("SELECT * FROM `booking` WHERE id_akomodasi = ?");
+$stmt->bind_param("i", $data_user['id_akomodasi']);
+$stmt->execute();
+$select_booking = $stmt->get_result();
+$stmt->close();
 ?>

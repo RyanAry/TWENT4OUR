@@ -188,4 +188,5 @@ include '../../../conf/admin/admin.php';
 
 <?php
 include '../../inc/alert.php';
+include '../../inc/dashboard/inc_footer.php';
 ?>

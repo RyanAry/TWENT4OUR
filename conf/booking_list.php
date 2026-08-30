@@ -1,12 +1,19 @@
 <?php
 include '../../conf/db.php';
 
+requireLogin();
+
 $username = $_SESSION['username'];
 
-$query = "SELECT * FROM user WHERE username = '$username'";
-$select = mysqli_query($db, $query);
-$data_user = mysqli_fetch_assoc($select);
+$stmt = $db->prepare("SELECT * FROM user WHERE username = ?");
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$data_user = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-$query_booking = "SELECT * FROM `booking` WHERE id_user = '$data_user[id_user]'";
-$select_booking = mysqli_query($db, $query_booking);
+$stmt = $db->prepare("SELECT * FROM `booking` WHERE id_user = ?");
+$stmt->bind_param("i", $data_user['id_user']);
+$stmt->execute();
+$select_booking = $stmt->get_result();
+$stmt->close();
 ?>

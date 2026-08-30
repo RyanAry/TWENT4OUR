@@ -197,3 +197,7 @@ include '../../../conf/partner/booking_list.php';
         </div>
     </div>
 </div>
+<?php
+include '../../inc/alert.php';
+include '../../inc/dashboard/inc_footer.php';
+?>

@@ -8,3 +8,6 @@ include '../../inc/dashboard/partner/inc_main.php';
         <hr class="bg-gray-200 h-2 rounded">
     </div>
 </div>
+<?php
+include '../../inc/dashboard/inc_footer.php';
+?>
